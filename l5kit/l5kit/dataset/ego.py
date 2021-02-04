@@ -21,6 +21,7 @@ class EgoDataset(Dataset):
             zarr_dataset: ChunkedDataset,
             rasterizer: Rasterizer,
             perturbation: Optional[Perturbation] = None,
+            render_path_prior: bool = False,
     ):
         """
         Get a PyTorch dataset object that can be used to train DNN
@@ -56,6 +57,7 @@ None if not desired
             filter_agents_threshold=cfg["raster_params"]["filter_agents_threshold"],
             rasterizer=rasterizer,
             perturbation=perturbation,
+            render_path_prior=render_path_prior,
         )
 
     def __len__(self) -> int:

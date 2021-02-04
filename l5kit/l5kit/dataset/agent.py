@@ -28,10 +28,11 @@ class AgentDataset(EgoDataset):
             agents_mask: Optional[np.ndarray] = None,
             min_frame_history: int = MIN_FRAME_HISTORY,
             min_frame_future: int = MIN_FRAME_FUTURE,
+            render_path_prior: bool = False,
     ):
         assert perturbation is None, "AgentDataset does not support perturbation (yet)"
 
-        super(AgentDataset, self).__init__(cfg, zarr_dataset, rasterizer, perturbation)
+        super(AgentDataset, self).__init__(cfg, zarr_dataset, rasterizer, perturbation, render_path_prior)
         if agents_mask is None:  # if not provided try to load it from the zarr
             agents_mask = self.load_agents_mask()
             past_mask = agents_mask[:, 0] >= min_frame_history

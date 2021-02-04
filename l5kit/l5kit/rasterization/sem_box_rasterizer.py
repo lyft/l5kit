@@ -43,11 +43,22 @@ class SemBoxRasterizer(Rasterizer):
         return np.concatenate([im_out_box, im_out_sem], -1)
 
     def to_rgb(self, in_im: np.ndarray, **kwargs: dict) -> np.ndarray:
-        im_out_box = self.box_rast.to_rgb(in_im[..., :-3], **kwargs)
-        im_out_sem = self.sem_rast.to_rgb(in_im[..., -3:], **kwargs)
+        total_ch = np.shape(in_im)[-1]
+        pp_num_ch = 1 if "path_prior" in kwargs and kwargs["path_prior"] is True else 0
+        sem_num_ch = 3
+        box_num_ch = total_ch - sem_num_ch - pp_num_ch
+        im_out_box = self.box_rast.to_rgb(in_im[..., :box_num_ch], **kwargs)
+        im_out_sem = self.sem_rast.to_rgb(in_im[..., box_num_ch:(box_num_ch + sem_num_ch)], **kwargs)
         # merge the two together
         mask_box = np.any(im_out_box > 0, -1)
         im_out_sem[mask_box] = im_out_box[mask_box]
+
+        if pp_num_ch:
+            path_prior_mask = in_im[:,:,-1]>0.0
+            im_out_sem[:,:,0][path_prior_mask] = 255
+            im_out_sem[:,:,1][path_prior_mask] = 0
+            im_out_sem[:,:,2][path_prior_mask] = 0
+
         return im_out_sem
 
     def num_channels(self) -> int:

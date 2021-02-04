@@ -2,6 +2,7 @@ from typing import Optional, Tuple
 
 import cv2
 import numpy as np
+from random import randint
 
 from l5kit.geometry import transform_point, transform_points
 
@@ -91,3 +92,24 @@ def draw_reference_trajectory(on_image: np.ndarray, world_to_pixel: np.ndarray, 
     positions_in_pixel_space = positions_in_pixel_space[mask]
     for pos in positions_in_pixel_space:
         cv2.circle(on_image, tuple(np.floor(pos).astype(np.int32)), 1, REFERENCE_TRAJ_COLOR, -1)
+
+
+def draw_path_prior_layer(shape: Tuple, positions: np.ndarray, width: float = 3, vary_positions_len: bool = False) -> np.ndarray:
+    """
+    Return a path prior layer with a trajectory (as polyline)
+    Args:
+        on_image (np.ndarray): the RGB image to draw onto
+        positions (np.ndarray): pixel coordinates in the image space (not displacements) (Nx2)
+        width (float): thickness of the polyline edges
+    Returns: np.ndarray
+
+    """
+    assert positions.ndim == 2
+
+    if vary_positions_len:
+        # Vary the length of reference trajectories
+        col_len = positions.shape[0]
+        random_len = randint(1,col_len)
+        positions = positions[0:random_len, 0:]
+
+    return cv2.polylines(np.zeros(shape, np.float32), [positions.astype(np.int32)], False, 1.0, width)

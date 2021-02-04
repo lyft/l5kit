@@ -9,6 +9,7 @@ from ..geometry import angular_distance, compute_agent_pose, rotation33_as_yaw, 
 from ..kinematic import Perturbation
 from ..rasterization import EGO_EXTENT_HEIGHT, EGO_EXTENT_LENGTH, EGO_EXTENT_WIDTH, Rasterizer, RenderContext
 from .slicing import get_future_slice, get_history_slice
+from l5kit.visualization import PREDICTED_POINTS_COLOR, TARGET_POINTS_COLOR, draw_trajectory, draw_path_prior_layer
 
 
 def get_agent_context(
@@ -171,6 +172,7 @@ def generate_agent_sample(
         filter_agents_threshold: float,
         rasterizer: Optional[Rasterizer] = None,
         perturbation: Optional[Perturbation] = None,
+        render_path_prior: bool = False,
 ) -> dict:
     """Generates the inputs and targets to train a deep prediction model. A deep prediction model takes as input
     the state of the world (here: an image we will call the "raster"), and outputs where that agent will be some
@@ -258,6 +260,10 @@ def generate_agent_sample(
 
     history_vels_mps, future_vels_mps = compute_agent_velocity(history_positions_m, future_positions_m, step_time)
 
+    raster_from_agent = raster_from_world @ world_from_agent
+    if input_im is not None and render_path_prior is True:
+        input_im = np.concatenate([input_im, _render_path_prior_layer(input_im, future_positions_m, raster_from_agent)], axis=2)    
+
     return {
         "frame_index": state_index,
         "image": input_im,
@@ -270,7 +276,7 @@ def generate_agent_sample(
         "history_velocities": history_vels_mps,
         "history_availabilities": history_availabilities,
         "world_to_image": raster_from_world,  # TODO deprecate
-        "raster_from_agent": raster_from_world @ world_from_agent,
+        "raster_from_agent": raster_from_agent,
         "raster_from_world": raster_from_world,
         "agent_from_world": agent_from_world,
         "world_from_agent": world_from_agent,
@@ -281,3 +287,9 @@ def generate_agent_sample(
         "history_extents": history_extents,
         "future_extents": future_extents,
     }
+
+def _render_path_prior_layer(input_im: np.ndarray, target_positions: np.ndarray, raster_from_agent: np.ndarray) ->  np.ndarray:
+    target_position_in_pixels = transform_points(target_positions, raster_from_agent)
+    pp_layer = draw_path_prior_layer(np.shape(input_im)[:2], target_position_in_pixels, 3)
+    pp_layer = np.expand_dims(pp_layer, 2)
+    return pp_layer
