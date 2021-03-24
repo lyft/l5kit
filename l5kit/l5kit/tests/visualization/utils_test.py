@@ -1,6 +1,6 @@
 import numpy as np
 
-from l5kit.visualization import draw_reference_trajectory, draw_trajectory
+from l5kit.visualization import draw_path_prior_layer, draw_reference_trajectory, draw_trajectory
 
 
 def test_draw_trajectory() -> None:
@@ -34,3 +34,15 @@ def test_draw_reference_trajectory() -> None:
     assert np.all(on_image[112, 112] == (255, 255, 0))
     assert np.all(on_image[112 + 10, 112 + 10] == (255, 255, 0))
     assert np.all(on_image[112 + 20, 112 + 20] == (255, 255, 0))
+
+
+def test_draw_prior() -> None:
+    positions = np.asarray([(0, 0), (1, 1), (2, 2)])  # XY notation, meter absolute
+    world_to_pixel = np.asarray(((10, 0, 112), (0, 10, 112), (0, 0, 1)))  # 1m->10px
+    layer = draw_path_prior_layer((224, 224), world_to_pixel, positions)
+
+    assert np.all(layer[112, 112] == 1.0)
+    assert np.all(layer[112 + 10, 112 + 10] == 1.0)
+    assert np.all(layer[112 + 20, 112 + 20] == 1.0)
+
+    assert np.all(layer[0, 0] == 0.0)

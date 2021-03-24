@@ -1,3 +1,4 @@
+from random import randint
 from typing import Optional, Tuple
 
 import cv2
@@ -91,3 +92,37 @@ def draw_reference_trajectory(on_image: np.ndarray, world_to_pixel: np.ndarray, 
     positions_in_pixel_space = positions_in_pixel_space[mask]
     for pos in positions_in_pixel_space:
         cv2.circle(on_image, tuple(np.floor(pos).astype(np.int32)), 1, REFERENCE_TRAJ_COLOR, -1)
+
+
+def draw_path_prior_layer(shape: Tuple[int, int], raster_from_meters: np.ndarray, positions: np.ndarray,
+                          thickness: float = 2, vary_positions_len: bool = False, draw_circle: bool = False) -> np.ndarray:
+    """
+    Draw a path prior on a black layer.
+    NOTE: this returns a np.float32 image in [0,1]
+
+    Args:
+        shape (Tuple[int, int]): shape as (H,W)
+        raster_from_meters (np.ndarray): 3x3 transformation matrix from meters to pixels
+        positions (np.ndarray): positions in meters
+        thickness (float): trajectory thickness
+        vary_positions_len (bool): if to drop random points from the end of the trajectory
+
+    Returns: A new layer with the path prior of shape (H, W)
+
+    """
+    assert positions.ndim == 2
+
+    # Add zero point to the rendering
+    positions = np.concatenate([np.zeros([1, 2]), positions])
+    positions = transform_points(positions, raster_from_meters)
+
+    if vary_positions_len:  # Vary the length of reference trajectories
+        random_len = randint(1, len(positions))
+        positions = positions[:random_len]
+
+    if draw_circle:
+        return cv2.circle(np.zeros(shape, np.float32), tuple(np.around(positions[-1]).astype(np.int32)), radius=2, color=1.0, thickness=thickness)
+    else:
+        if len(positions) == 1:  # ensure we have at least two points to draw the line
+            positions = np.concatenate([positions, positions])
+        return cv2.polylines(np.zeros(shape, np.float32), [np.around(positions).astype(np.int32)], False, 1.0, thickness)
