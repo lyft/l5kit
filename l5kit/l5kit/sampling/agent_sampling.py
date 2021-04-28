@@ -213,9 +213,9 @@ def generate_agent_sample(
         history_tl_faces,
         future_tl_faces,
     ) = get_agent_context(state_index, frames, agents, tl_faces, history_num_frames, future_num_frames, )
-
+    curr_displacement = None
     if perturbation is not None and len(future_frames) == future_num_frames:
-        history_frames, future_frames = perturbation.perturb(
+        history_frames, future_frames, curr_displacement = perturbation.perturb(
             history_frames=history_frames, future_frames=future_frames
         )
 
@@ -264,11 +264,11 @@ def generate_agent_sample(
         "target_positions": future_positions_m,
         "target_yaws": future_yaws_rad,
         "target_velocities": future_vels_mps,
-        "target_availabilities": future_availabilities,
+        "target_availabilities": future_availabilities.astype(np.bool),
         "history_positions": history_positions_m,
         "history_yaws": history_yaws_rad,
         "history_velocities": history_vels_mps,
-        "history_availabilities": history_availabilities,
+        "history_availabilities": history_availabilities.astype(np.bool),
         "world_to_image": raster_from_world,  # TODO deprecate
         "raster_from_agent": raster_from_world @ world_from_agent,
         "raster_from_world": raster_from_world,
@@ -280,7 +280,8 @@ def generate_agent_sample(
         "history_extents": history_extents,
         "future_extents": future_extents,
     }
-    if len(history_vels_mps) > 0:
-        # estimated current speed based on displacement between current frame at T and past frame at T-1
-        result["curr_speed"] = np.linalg.norm(history_vels_mps[0])
+    if curr_displacement is not None:
+        result["speed"] = curr_displacement / step_time
+    elif len(history_vels_mps) > 0:
+        result["speed"] = np.linalg.norm(history_vels_mps[0])
     return result
