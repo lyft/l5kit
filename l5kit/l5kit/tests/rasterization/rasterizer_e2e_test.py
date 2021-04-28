@@ -18,9 +18,9 @@ def check_rasterizer(cfg: dict, rasterizer: Rasterizer, zarr_dataset: ChunkedDat
         assert len(im.shape) == 3
         assert im.shape[-1] == rasterizer.num_channels()
         assert im.shape[:2] == tuple(cfg["raster_params"]["raster_size"])
-        assert im.max() <= 1
+        assert im.max() <= 255
         assert im.min() >= 0
-        assert im.dtype == np.float32
+        assert im.dtype == np.uint8
 
         rgb_im = rasterizer.to_rgb(im)
         assert im.shape[:2] == rgb_im.shape[:2]

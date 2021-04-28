@@ -152,7 +152,7 @@ class BoxRasterizer(Rasterizer):
         # combine such that the image consists of [agent_t, agent_t-1, agent_t-2, ego_t, ego_t-1, ego_t-2]
         out_im = np.concatenate((agents_images, ego_images), -1)
 
-        return out_im.astype(np.float32) / 255
+        return out_im
 
     def to_rgb(self, in_im: np.ndarray, **kwargs: dict) -> np.ndarray:
         """This function is used to get an rgb image where agents further in the past have faded colors.
@@ -162,7 +162,7 @@ class BoxRasterizer(Rasterizer):
         :return: An RGB image with agents and ego coloured with fading colors
         """
         hist_frames = in_im.shape[-1] // 2
-        in_im = np.transpose(in_im, (2, 0, 1))
+        in_im = np.transpose(in_im, (2, 0, 1)) / 255
 
         # this is similar to the draw history code
         out_im_agent = np.zeros((self.raster_size[1], self.raster_size[0], 3), dtype=np.float32)

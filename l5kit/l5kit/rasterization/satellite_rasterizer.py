@@ -77,10 +77,10 @@ class SatelliteRasterizer(Rasterizer):
         )
         if not self.render_context.set_origin_to_bottom:
             sat_im = sat_im[::-1]
-        return sat_im.astype(np.float32) / 255
+        return sat_im
 
     def to_rgb(self, in_im: np.ndarray, **kwargs: dict) -> np.ndarray:
-        return (in_im * 255).astype(np.uint8)
+        return in_im
 
     def num_channels(self) -> int:
         return 3

@@ -111,7 +111,7 @@ class SemanticRasterizer(Rasterizer):
         center_in_world_m = transform_point(center_in_raster_px, world_from_raster)
 
         sem_im = self.render_semantic_map(center_in_world_m, raster_from_world, history_tl_faces[0])
-        return sem_im.astype(np.float32) / 255
+        return sem_im
 
     def render_semantic_map(
             self, center_in_world: np.ndarray, raster_from_world: np.ndarray, tl_faces: np.ndarray
@@ -180,7 +180,7 @@ class SemanticRasterizer(Rasterizer):
         return img
 
     def to_rgb(self, in_im: np.ndarray, **kwargs: dict) -> np.ndarray:
-        return (in_im * 255).astype(np.uint8)
+        return in_im
 
     def num_channels(self) -> int:
         return 3
